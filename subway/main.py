@@ -154,13 +154,16 @@ def run(**kwargs) -> None:
         _result = list(map(lambda x: x.get(), task_result))
         # 如果存在用户未抢到票, 则重置用户列表, 进行下次尝试
         users = list(filter(lambda x: not x.get('result'), _result))
-        _conf_data = conf(_conf)
-        _token, _sign = _conf_data.get('dingTalkToken'), _conf_data.get('dingTalkSign')
 
-        if _ding_talk:
-            _ding = message.DingTalk(_token, _sign)
-            for item in _result:
-                _ding.text(f'{item.get("name")}抢票: {"成功" if item.get("result") else "失败"}')
+        for item in _result:
+            _message = f'{item.get("name")}抢票: {"成功" if item.get("result") else "失败"}'
+            logging.info(_message)
+
+            if _ding_talk:
+                _conf_data = conf(_conf)
+                _token, _sign = _conf_data.get('dingTalkToken'), _conf_data.get('dingTalkSign')
+                _ding = message.DingTalk(_token, _sign)
+                _ding.text(_message)
 
 
 def task(**kwargs) -> dict:
@@ -183,30 +186,38 @@ def task(**kwargs) -> dict:
     time_slot = kwargs.pop('timeSlot', '0720-0730')
     token = kwargs.pop('token', None)
     interval = kwargs.pop('interval', 1)
-    frequency = kwargs.pop('frequency', 5)
+    frequency = kwargs.pop('frequency', 7)
+    kwargs['result'] = True
 
     _metro = metro.Metro(token)
 
     # 如果已存在当前时段的预约则终止
-    exist = _metro.appointment(stationName=_station, arrivalTime=time_slot)
+    exist = _metro.appointment(stationName=_station, arrivalTime=time_slot, timeout=2)
     if exist:
         logging.info('检测到已存在预约, 终止程序')
-        kwargs['result'] = True
         return kwargs
 
     utils.timer(_start)
 
     for item in range(frequency):
         _balance = _metro.balance(stationName=_station, timeSlot=time_slot)
-        if _balance:
+        if _balance or not item:
             logging.info(f'{_station}-{time_slot} 时段存在余票, 准备抢票')
-            result = _metro.shakedown(
-                lineName=_line,
-                stationName=_station,
-                timeSlot=time_slot
-            )
+
+            thread_list = []
+            for _ in range(3):
+                thread = threading.Thread(target=_metro.shakedown, kwargs=dict(
+                    lineName=_line,
+                    stationName=_station,
+                    timeSlot=time_slot
+                ))
+                thread.start()
+                thread_list.append(thread)
+            for _thread in thread_list:
+                _thread.join()
+
+            result = _metro.appointment(stationName=_station, arrivalTime=time_slot, timeout=2)
             if result:
-                kwargs['result'] = True
                 break
         else:
             logging.info(f'{_station}-{time_slot} 时段已经没有余票了...')
@@ -216,8 +227,10 @@ def task(**kwargs) -> dict:
         logging.info(f'程序运行了 {frequency} 次, 没有抢到票...')
         kwargs['result'] = False
 
+    # 由于高峰期接口容易超时, 最后程序运行完成后再进行一次断言
+    kwargs['result'] = _metro.appointment(stationName=_station, arrivalTime=time_slot)
     return kwargs
 
 
 if __name__ == '__main__':
-    run(confPath='confPath.json', dingTalk=True)
+    run(dingTalk=True)

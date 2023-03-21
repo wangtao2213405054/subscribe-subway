@@ -2,6 +2,8 @@
 # _date: 2023/3/16 13:06
 
 from typing import Union, Dict, List
+from requests.exceptions import ReadTimeout
+from urllib3.exceptions import ReadTimeoutError
 
 import traceback
 import datetime
@@ -87,13 +89,8 @@ class Metro:
             snapshotTimeSlot='0630-0930'
         )
         uri = '/Appointment/CreateAppointment'
-        response = self.request('POST', uri, json=body)
-        if isinstance(response, dict) and response.get('balance') < 0:
-            logging.error('抢票失败')
-            return False
-        else:
-            logging.error('抢票成功')
-            return True
+        response = self.request('POST', uri, json=body, timeout=2, exceptions=(ReadTimeout, ReadTimeoutError))
+        return isinstance(response, dict) and response.get('balance') > 0
 
     def balance(self, **kwargs) -> List:
         """
@@ -129,17 +126,19 @@ class Metro:
         :param kwargs:
                 stationName: 站点名称, 格式: 沙河站
                 arrivalTime: 查询预约时段, 格式: 0640-0650
+                timeout: 接口超时时间, 如果为 None 则一直等待
         :return: 返回预约是否存在, 存在此阶段预约则返回 True, 否则为 False
         """
 
         station_name = kwargs.pop('stationName', None)
         arrival_time = kwargs.pop('arrivalTime', None)
+        timeout = kwargs.pop('timeout', None)
 
         params = dict(
             status=0,
             lastid=''
         )
-        response = self.request('GET', '/AppointmentRecord/GetAppointmentList', params=params)
+        response = self.request('GET', '/AppointmentRecord/GetAppointmentList', params=params, timeout=timeout)
 
         if not response:
             return False
@@ -161,9 +160,9 @@ class Metro:
 
 
 if __name__ == '__main__':
-    _token = 'NmIyMjYyOGUtMzI5Zi00MzYwLWIwMjQtNzM3ZjEyNTAwZjU5LDE2Nzk0ODg3OTk0MzMsbVh4Um9yRWpnU2pz' \
-             'ZGhqN1MzSXEzdWJRWE5rPQ=='
+    _token = "YjA2YWM0ODMtNzQwOS00MjcyLWE3YWQtNzg5MWM5MDJlZjkzLDE2Nzk2Njg5OTk3MDkseStu" \
+             "MS9aNFpCZGpvVW54N3Y1RGppMG5odHJJPQ=="
     data = {"lineName": '昌平线', "snapshotWeekOffset": 0, "stationName": '沙河站', "enterDate": '20230317',
             "snapshotTimeSlot": "0630-0930", "timeSlot": '0630-0640'}
     _metro = Metro(_token)
-    print(_metro.balance(stationName='天通苑站', arrivalTime='0630-0650'))
+    print(_metro.appointment(stationName='天通苑站', arrivalTime='0630-0650'))
