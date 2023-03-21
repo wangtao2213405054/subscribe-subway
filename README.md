@@ -10,7 +10,7 @@
 
 在使用自动预约程序之前，需要完成以下准备工作：
 
-1. 安装 Python3.6 及以上开发环境。
+1. 安装 Python3.9 及以上开发环境。
 2. 安装程序所需要的依赖库：requests、click。可通过( python setup.py install )安装所有依赖
 3. 打开 [北京地铁预约页面](https://webui.mybti.cn/#/login) 抓取接口 Headers 中的 authorization 字段内容
 4. 配置 conf/conf.json 文件或者程序中指定自己的配置文件, 格式如下:
