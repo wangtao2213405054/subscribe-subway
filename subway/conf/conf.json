@@ -7,16 +7,16 @@
       "stationName": "沙河站",
       "timeSlot": "0720-0730",
       "name": "Coke",
-      "mobile": "13520421043",
+      "mobile": "18888888888",
       "token": "NmIyMjYyOGUtMzI5Zi00MzYwLWIwMjQtNzM3ZjEyNTAwZjU5LDE2Nzk0ODg3OTk0MzMsbVh4Um9yRWpnU2pzZGhqN1MzSXEzdWJRWE5rPQ=="
     },
     {
       "lineName": "昌平线",
       "stationName": "沙河站",
       "timeSlot": "0750-0800",
-      "name": "周石磊",
-      "mobile": "18911412072",
-      "token": "YjA2YWM0ODMtNzQwOS00MjcyLWE3YWQtNzg5MWM5MDJlZjkzLDE2Nzk2Njg5OTk3MDkseStuMS9aNFpCZGpvVW54N3Y1RGppMG5odHJJPQ=="
+      "name": "TestTwo",
+      "mobile": "18888888888",
+      "token": ""
     }
   ]
 }
