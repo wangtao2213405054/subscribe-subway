@@ -67,10 +67,30 @@ def timeliness(path) -> None:
 
 
 @click.command()
-@click.option('--subscribe', '-s', help='设置抢票时间段, 官方提示为每日12点、20点方法次日预约名额', default='12,20')
-@click.option('--processes', '-ps', help='进程池最多同时运行的数量', default=5)
-@click.option('--dingtalk', '-dt', help='是否启动钉钉机器人通知, 需要在配置文件中配置webhook和sign', default=0)
-@click.option('--path', '-p', help='指定的配置文件路径, 如不指定则使用项目下conf/conf.json文件', default='')
+@click.option(
+    '--subscribe',
+    '-s',
+    help='设置抢票时间段, 官方提示为每日12点、20点方法次日预约名额, 默认值为 "12,20" 如需多个时间点请以英文 , 分割',
+    default='12,20'
+)
+@click.option(
+    '--processes',
+    '-ps',
+    help='进程池最多同时运行的数量, 默认最多同时启动 5 个线程',
+    default=5
+)
+@click.option(
+    '--dingtalk',
+    '-dt',
+    help='是否启动钉钉机器人通知, 启动为 1 , 默认不启动 0, 如需启动请在配置文件中指定钉钉机器人的 webhook 和 sign',
+    default=0
+)
+@click.option(
+    '--path',
+    '-p',
+    help='指定的配置文件路径, 如不指定则使用项目下 conf/conf.json 文件',
+    default=''
+)
 def command(subscribe: str, processes: int, dingtalk: int, path: str) -> None:
     subscribe = list(map(lambda x: int(x), subscribe.split(',')))
     dingtalk = bool(dingtalk)
@@ -233,4 +253,4 @@ def task(**kwargs) -> dict:
 
 
 if __name__ == '__main__':
-    run(dingTalk=True)
+    command()
