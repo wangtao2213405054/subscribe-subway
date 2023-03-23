@@ -90,7 +90,7 @@ class Metro:
         )
         uri = '/Appointment/CreateAppointment'
         response = self.request('POST', uri, json=body, timeout=2, exceptions=(ReadTimeout, ReadTimeoutError))
-        return isinstance(response, dict) and response.get('balance') > 0
+        return isinstance(response, dict) and isinstance(response.get('balance'), int) and response.get('balance') > 0
 
     def balance(self, **kwargs) -> List:
         """
@@ -138,7 +138,13 @@ class Metro:
             status=0,
             lastid=''
         )
-        response = self.request('GET', '/AppointmentRecord/GetAppointmentList', params=params, timeout=timeout)
+        response = self.request(
+            'GET',
+            '/AppointmentRecord/GetAppointmentList',
+            params=params,
+            timeout=timeout,
+            exceptions=(ReadTimeout, ReadTimeoutError)
+        )
 
         if not response:
             return False
