@@ -10,11 +10,11 @@ import logging
 import click
 import time
 import json
-import os
 import sys
+import os
 
 
-def conf(path: Optional[str]) -> dict:
+def conf(path: Optional[str] = None) -> dict:
     """
     获取配置文件中的抢票信息
     :param path: 指定配置文件路径, 如不指定则使用项目 conf/conf.json 文件
@@ -30,7 +30,7 @@ def conf(path: Optional[str]) -> dict:
         return json.loads(file.read())
 
 
-def timeliness(path) -> None:
+def timeliness(path: Optional[str] = None) -> None:
     """
     鉴定用户列表中的 Token 过期时间, 如果小于 1天 或 失效则进行通知
     :return:
@@ -64,38 +64,6 @@ def timeliness(path) -> None:
         )
         tomorrow = (today + datetime.timedelta(days=1, hours=10)).timestamp()
         utils.timer(tomorrow)
-
-
-@click.command()
-@click.option(
-    '--subscribe',
-    '-s',
-    help='设置抢票时间段, 官方提示为每日12点、20点方法次日预约名额, 默认值为 "12,20" 如需多个时间点请以英文 , 分割',
-    default='12,20'
-)
-@click.option(
-    '--processes',
-    '-ps',
-    help='进程池最多同时运行的数量, 默认最多同时启动 5 个线程',
-    default=5
-)
-@click.option(
-    '--dingtalk',
-    '-dt',
-    help='是否启动钉钉机器人通知, 启动为 1 , 默认不启动 0, 如需启动请在配置文件中指定钉钉机器人的 webhook 和 sign',
-    default=0
-)
-@click.option(
-    '--path',
-    '-p',
-    help='指定的配置文件路径, 如不指定则使用项目下 conf/conf.json 文件',
-    default=''
-)
-def command(subscribe: str, processes: int, dingtalk: int, path: str) -> None:
-    subscribe = list(map(lambda x: int(x), subscribe.split(',')))
-    dingtalk = bool(dingtalk)
-    path = path if path else None
-    run(subscribeTime=subscribe, processes=processes, dingTalk=dingtalk, confPath=path)
 
 
 def run(**kwargs) -> None:
@@ -250,6 +218,24 @@ def task(**kwargs) -> dict:
     # 由于高峰期接口容易超时, 最后程序运行完成后再进行一次断言
     kwargs['result'] = _metro.appointment(stationName=_station, arrivalTime=time_slot)
     return kwargs
+
+
+__subscribe = '设置抢票时间段, 官方提示为每日12点、20点方法次日预约名额, 默认值为 "12,20" 如需多个时间点请以英文 , 分割'
+__processes = '进程池最多同时运行的数量, 默认最多同时启动 5 个线程'
+__dingtalk = '是否启动钉钉机器人通知, 启动为 1 , 默认不启动 0, 如需启动请在配置文件中指定钉钉机器人的 webhook 和 sign'
+__path = '指定的配置文件路径, 如不指定则使用项目下 conf/conf.json 文件'
+
+
+@click.command()
+@click.option('--subscribe', '-s', help=__subscribe, default='12,20')
+@click.option('--processes', '-ps', help=__processes, default=5)
+@click.option('--dingtalk', '-dt', help=__dingtalk, default=0)
+@click.option('--path', '-p', help=__path, default='')
+def command(subscribe: str, processes: int, dingtalk: int, path: str) -> None:
+    subscribe = list(map(lambda x: int(x), subscribe.split(',')))
+    dingtalk = bool(dingtalk)
+    path = path if path else None
+    run(subscribeTime=subscribe, processes=processes, dingTalk=dingtalk, confPath=path)
 
 
 if __name__ == '__main__':
