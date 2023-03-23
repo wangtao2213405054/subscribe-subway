@@ -1,7 +1,6 @@
 # _author: Coke
 # _date: 2023/3/16 17:16
 
-from subway import metro, utils, logger, message
 from typing import Optional
 
 import multiprocessing
@@ -12,6 +11,7 @@ import click
 import time
 import json
 import os
+import sys
 
 
 def conf(path: Optional[str]) -> dict:
@@ -253,4 +253,6 @@ def task(**kwargs) -> dict:
 
 
 if __name__ == '__main__':
+    sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+    from subway import metro, utils, logger, message
     command()
