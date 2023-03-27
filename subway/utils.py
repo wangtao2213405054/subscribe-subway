@@ -1,6 +1,10 @@
 # _author: Coke
 # _date: 2023/3/16 11:16
 
+from requests.exceptions import ConnectionError
+from requests.exceptions import ReadTimeout
+from urllib3.exceptions import ReadTimeoutError
+
 import requests
 import base64
 import time
@@ -24,8 +28,11 @@ def holiday(date) -> bool:
     :param date: 要获取的日期, 格式: 20230316
     :return: 如果是节假日返回 True, 否则为 False
     """
-    response = requests.request('GET', 'https://tool.bitefu.net/jiari', params=dict(d=date))
-    if response.status_code != 200:
+    try:
+        response = requests.request('GET', 'https://tool.bitefu.net/jiari', params=dict(d=date))
+        if response.status_code != 200:
+            return False
+    except (ConnectionError, ReadTimeout, ReadTimeoutError):
         return False
 
     return bool(response.json())
