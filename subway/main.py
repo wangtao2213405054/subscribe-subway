@@ -1,6 +1,7 @@
 # _author: Coke
 # _date: 2023/3/16 17:16
 
+
 from typing import Optional
 
 import multiprocessing
@@ -12,6 +13,13 @@ import time
 import json
 import sys
 import os
+
+try:
+    sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+    from subway import metro, utils, logger, message
+except ImportError as e:
+    logging.error('请确保运行路径正确 ...')
+    raise e
 
 
 def conf(path: Optional[str] = None) -> dict:
@@ -239,6 +247,4 @@ def command(subscribe: str, processes: int, dingtalk: int, path: str) -> None:
 
 
 if __name__ == '__main__':
-    sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-    from subway import metro, utils, logger, message
     command()
