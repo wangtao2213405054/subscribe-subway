@@ -1,7 +1,6 @@
 # _author: Coke
 # _date: 2023/3/16 17:16
 
-
 from typing import Optional
 
 import multiprocessing
@@ -13,6 +12,11 @@ import time
 import json
 import sys
 import os
+
+
+if sys.version_info < (3, 9):
+    raise AttributeError('需要 3.9 及以上的 Python 版本')
+
 
 try:
     sys.path.append(os.path.dirname(os.path.dirname(__file__)))
