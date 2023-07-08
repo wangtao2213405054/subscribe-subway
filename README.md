@@ -19,7 +19,7 @@
 {
   "dingTalkToken": "",
   "dingTalkSign": "",
-  "UserAgent": [
+  "userAgent": [
     {
       "lineName": "昌平线",
       "stationName": "沙河站",
@@ -34,21 +34,24 @@
       "timeSlot": "0750-0800",
       "name": "CokeTwo",
       "mobile": "18888888888",
+      "shakedown": true,
       "token": "EFGHZDBhMTEtMmM2MC00OGI2LTg3MGMtNjE3N2Q0NjlhNjIxLDE2MTA5NzE3MDUwOTIsTXFIeHlKb2JMRFovSTcrQnpPNFRkdXhzSTc4PQ=="
     }
   ]
 }
 ```
-```python
-dingTalkToken = ""  # 钉钉机器人的 webhook
-dingTalkSign = ""  # 钉钉机器人的加签密钥
-UserAgent = []  # 需要抢票的用户列表
-lineName = "昌平线"  # 要抢票的线路, 可选值: 昌平线、5号线、6号线
-stationName = "沙河站"  # 要抢票的站点, 可选择: 沙河站、天通苑站、草房站
-timeSlot = "0750-0800"  # 抢票时段, 如早上6:30 ~ 6:40 则需要输入 0630-0640
-name = "name"  # 这是一个列表的 Key, 当存在多个抢票用户时, 可根据此 Key 来区分用户
-mobile = "18888888888"  # 手机号, 预留字段, 可忽略
-token = ""  # token 对应了地铁预约程序的 authorization 字段
+```javascript
+// 下列带有 * 的是必填参数, 如果未填写则无法通过校验
+dingTalkToken = ""  // 钉钉机器人的 webhook
+dingTalkSign = ""  // 钉钉机器人的加签密钥
+UserAgent = []  // 需要抢票的用户列表
+lineName = "昌平线"  // * 要抢票的线路, 可选值: 昌平线、5号线、6号线
+stationName = "沙河站"  // * 要抢票的站点, 可选择: 沙河站、天通苑站、草房站
+timeSlot = "0750-0800"  // * 抢票时段, 如早上6:30 ~ 6:40 则需要输入 0630-0640
+name = "name"  // * 这是一个列表的 Key, 当存在多个抢票用户时, 可根据此 Key 来区分用户
+mobile = "18888888888"  // 手机号, 预留字段, 可忽略
+token = ""  // * token 对应了地铁预约程序的 authorization 字段
+shakedown = false // 如果 shakedown 参数为 true 则忽略此用户, 此用户将不会参与抢票、验证及消息通知
 ```
 
 ### 2.2 运行程序

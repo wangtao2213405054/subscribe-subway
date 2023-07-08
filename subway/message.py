@@ -1,7 +1,7 @@
 # _author: Coke
 # _date: 2022/7/29 10:27
 
-from typing import Union
+from typing import Union, Tuple
 
 import urllib.parse
 import requests
@@ -36,7 +36,7 @@ class DingTalk:
             self.url += f'&timestamp={timestamp}&sign={sign}'
 
     @staticmethod
-    def sign(secret) -> tuple[str, str]:
+    def sign(secret) -> Tuple[str, str]:
         """
         生成钉钉机器人签名
         :return: timestamp, sign
@@ -151,7 +151,7 @@ class Lark:
             self.body['sign'] = sign
 
     @staticmethod
-    def sign(secret) -> tuple[int, str]:
+    def sign(secret) -> Tuple[int, str]:
         # 拼接timestamp和secret
         timestamp = int(time.time())
         string_to_sign = '{}\n{}'.format(timestamp, secret)

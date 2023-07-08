@@ -3,12 +3,12 @@
 
 from . import (
     logger,
-    main,
+    discard,
     message,
     metro,
     utils
 )
-from .main import (
+from .discard import (
     run,
     command
 )
