@@ -1,8 +1,7 @@
 # _author: Coke
 # _date: 2023/3/16 11:16
 
-from requests.exceptions import ConnectionError
-from requests.exceptions import ReadTimeout
+from requests.exceptions import ConnectionError, ReadTimeout
 from urllib3.exceptions import ReadTimeoutError
 
 import requests
@@ -17,9 +16,12 @@ def decode(token) -> int:
     :return: 解密后的时间戳
     """
 
-    _decode = base64.b64decode(token)
-    timestamp = int(_decode.decode().split(',')[1]) / 1000
-    return int(timestamp)
+    try:
+        _decode = base64.b64decode(token)
+        timestamp = int(_decode.decode().split(',')[1]) / 1000
+        return int(timestamp)
+    except (Exception, ):
+        return -1
 
 
 def holiday(date) -> bool:
