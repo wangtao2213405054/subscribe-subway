@@ -7,9 +7,9 @@
       "stationName": "沙河站",
       "timeSlot": "0720-0730",
       "name": "Coke",
-      "shakedown": true,
+      "shakedown": false,
       "mobile": "18888888888",
-      "token": "NmIyMjYyOGUtMzI5Zi00MzYwLWIwMjQtNzM3ZjEyNTAwZjU5LDE2Nzk0ODg3OTk0MzMsbVh4Um9yRWpnU2pzZGhqN1MzSXEzdWJRWE5rPQ=="
+      "token": "=="
     },
     {
       "lineName": "昌平线",

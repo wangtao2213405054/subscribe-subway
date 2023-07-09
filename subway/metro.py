@@ -166,8 +166,7 @@ class Metro:
 
 
 if __name__ == '__main__':
-    _token = "YjA2YWM0ODMtNzQwOS00MjcyLWE3YWQtNzg5MWM5MDJlZjkzLDE2Nzk2Njg5OTk3MDkseStu" \
-             "MS9aNFpCZGpvVW54N3Y1RGppMG5odHJJPQ=="
+    _token = "=="
     data = {"lineName": '昌平线', "snapshotWeekOffset": 0, "stationName": '沙河站', "enterDate": '20230317',
             "snapshotTimeSlot": "0630-0930", "timeSlot": '0630-0640'}
     _metro = Metro(_token)

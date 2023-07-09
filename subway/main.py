@@ -68,8 +68,11 @@ class Subway:
         self.file_content: str = self._read_file_content()
 
         # 检查文件配置是否符合规范
-        _check, _message = self._check_content(self.file_content)
-        assert _check, _message
+        assert self._check_content(self.file_content)
+
+        # 检查 钉钉内容
+        if self.dingtalk:
+            self._check_dingtalk()
 
         # 创建一个用户通知容器
         self.user_notification = dict()
@@ -90,6 +93,14 @@ class Subway:
         :return: 未过期返回 (True, 过期时间) 否则返回 (False, 过期时间)
         """
         return utils.decode(token) > int(time.time())
+
+    def _check_dingtalk(self) -> None:
+        """
+        检查钉钉机器人的 Token 和 签名是否存在
+        """
+        content: dict = json.loads(self.file_content)
+        token, sign = content.get('dingTalkToken'), content.get('dingTalkSign')
+        assert token and sign, '未配置钉钉 webhook 或 sign'
 
     def _check_content(self, content: str) -> Tuple[bool, Type[Exception]]:
         """
@@ -143,7 +154,7 @@ class Subway:
         _notification.start()
         _file_change.start()
 
-    def run(self):
+    def run(self) -> None:
         """
         执行抢票任务的主入口, 过滤国家法定节假日
         :return:
@@ -195,6 +206,11 @@ class Subway:
             task_result = []
             users = json.loads(self.file_content).get('userAgent')
             for item in users:
+
+                # 忽略用户
+                if item.get('shakedown'):
+                    continue
+
                 # 如果用户 Token 已经过期则忽略此用户
                 if not self._check_token(item.get('token')):
                     continue
@@ -382,7 +398,8 @@ class Subway:
         while True:
             # 检查文件内容是否发生变化
             new_content = self._read_file_content()
-            if new_content != self.file_content and self._check_content(new_content):
+            _result, _message = self._check_content(new_content)
+            if new_content != self.file_content and _result:
                 logging.info('文件发生变化')
 
                 # 处理文件内容变化的逻辑

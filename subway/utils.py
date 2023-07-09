@@ -50,8 +50,5 @@ def timer(start) -> None:
 
 
 if __name__ == '__main__':
-    _token = 'NmIyMjYyOGUtMzI5Zi00MzYwLWIwMjQtNzM3ZjEyNTAwZjU5LDE2Nzk0ODg3OTk0MzMsbVh4Um9yRWpnU2pz' \
-             'ZGhqN1MzSXEzdWJRWE5rPQ=='
-    print(decode(_token), time.time())
-    print(decode(_token) - int(time.time()))
-    print(60*60*24)
+    _token = ''
+    print(decode(_token))

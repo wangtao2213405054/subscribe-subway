@@ -8,7 +8,7 @@ from . import (
     metro,
     utils
 )
-from .discard import (
-    run,
-    command
+from .main import (
+    command,
+    Subway
 )
