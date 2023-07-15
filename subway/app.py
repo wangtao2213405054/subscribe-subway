@@ -1,17 +1,21 @@
 # _author: Coke
 # _date: 2023/7/10 19:57
 
-from subway.main import Subway
-
 import tkinter.messagebox
 import customtkinter
 import subprocess
 import threading
-import utils
 import time
 import json
 import sys
 import os
+
+try:
+    sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+    from subway.main import Subway
+    from subway import utils
+except ImportError as e:
+    raise ImportError('请进入项目路径 subscribe-subway/subway 目录运行此脚本')
 
 customtkinter.set_appearance_mode("Dark")  # 设置主题颜色: "Dark", "Light"
 customtkinter.set_default_color_theme("blue")  # 设置组件风格: "blue" (standard), "green", "dark-blue"
@@ -28,13 +32,14 @@ class APP(customtkinter.CTk):
         super(APP, self).__init__()
         self.subway_threading = None  # 创建抢票线程对象
         self.set_windows()
+        self.log_path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'log.log'))
 
         # 设置权重
         self.grid_columnconfigure(1, weight=1)
         self.grid_columnconfigure(2, weight=0)
         self.grid_rowconfigure(0, weight=1)
 
-        self.sidebar_frame = SidebarView(self, width=140, corner_radius=0)
+        self.sidebar_frame = SidebarView(self, self.log_path, width=140, corner_radius=0)
 
         # 设置运行程序按钮
         self.running_button = customtkinter.CTkButton(self, text="运行任务", command=self.run_subway_task)
@@ -69,7 +74,10 @@ class APP(customtkinter.CTk):
                     subscribeTime=[12, 20],
                     dingTalk=bool(self.sidebar_frame.dingtalk_switch.get()),
                     app=self.textbox,
-                    level=self.sidebar_frame.logger_select.get()
+                    level=self.sidebar_frame.logger_select.get(),
+                    confPath=os.path.abspath(os.path.join(os.path.dirname(__file__), 'conf', 'conf.json')),
+                    logConf=os.path.abspath(os.path.join(os.path.dirname(__file__), 'conf', 'log.json')),
+                    logPath=self.log_path
                 ).run,
                 daemon=True
             )
@@ -98,11 +106,11 @@ class APP(customtkinter.CTk):
 class SidebarView(customtkinter.CTkFrame):
     """ 侧边栏视图 """
 
-    def __init__(self, master: any, **kwargs):
+    def __init__(self, master: any, log_path, **kwargs):
         super(SidebarView, self).__init__(master, **kwargs)
         self.grid(row=0, column=0, rowspan=4, sticky="nsew")
         self.grid_rowconfigure(4, weight=1)
-
+        self.log_path = log_path
         # 配置文件窗口
         self.config_window = None
 
@@ -146,16 +154,14 @@ class SidebarView(customtkinter.CTkFrame):
         else:
             self.config_window.focus()  # 如果窗口存在则打开他
 
-    @staticmethod
-    def open_log_file():
+    def open_log_file(self):
         """ 打开详细日志的钩子 """
-        file_path = os.path.abspath(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'log.log'))
         if sys.platform.startswith('win'):
-            subprocess.Popen(['start', file_path], shell=True)
+            subprocess.Popen(['start', self.log_path], shell=True)
         elif sys.platform.startswith('darwin'):
-            subprocess.Popen(['open', file_path])
+            subprocess.Popen(['open', self.log_path])
         elif sys.platform.startswith('linux'):
-            subprocess.Popen(['xdg-open', file_path])
+            subprocess.Popen(['xdg-open', self.log_path])
         else:
             tkinter.messagebox.showerror('温馨提示', '未知的操作系统, 无法打开文件')
 
@@ -537,5 +543,5 @@ class ConfigTabView(customtkinter.CTkTabview):
 
 
 if __name__ == '__main__':
-    app = APP()
-    app.mainloop()
+    _app = APP()
+    _app.mainloop()

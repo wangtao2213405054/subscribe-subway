@@ -46,6 +46,8 @@ class Subway:
                 processes -> int: 进程池最多同时运行的数量
                 dingTalk -> bool: 是否启动钉钉机器人通知
                 confPath -> str: 配置文件路径
+                logPath -> str: 日志文件路径
+                logConf -> str: 日志配置文件
                 app -> Type: 如果通过 app 启动则传递 <customtkinter.CTkTextbox> 类
                 level -> str: 日志等级
         :return:
@@ -56,8 +58,14 @@ class Subway:
         self.filename = kwargs.pop('confPath', None)
         self.app = kwargs.pop('app', None)
         self.logger_level = kwargs.pop('level', 'INFO')
-        self.logger = logger.LoggingOutput(self.logger_level, handle=self.app if self.app is not None else None)
-
+        self.log_path = kwargs.pop('logPath', None)
+        self.log_conf = kwargs.pop('logConf', None)
+        self.logger = logger.LoggingOutput(
+            self.logger_level,
+            log_path=self.log_path,
+            log_conf=self.log_conf,
+            handle=self.app if self.app is not None else None
+        )
         # 如果未指定配置文件则使用默认配置文件
         if self.filename is None:
             self.filename = os.path.abspath(os.path.join(
@@ -66,6 +74,8 @@ class Subway:
                 'conf.json'
             ))
 
+        self.logger.debug(f'日志文件路径: {self.log_path}')
+        self.logger.debug(f'配置文件路径{self.filename}')
         # 判断文件是否存在
         assert os.path.exists(self.filename), '配置文件路径不正确, 请检查'
 
@@ -231,6 +241,8 @@ class Subway:
 
                 item['startTime'] = start_time
                 item['level'] = self.logger_level
+                item['logPath'] = self.log_path,
+                item['logConf'] = self.log_conf
                 result = pool.apply_async(self.task, kwds=item)
                 task_result.append(result)
 
@@ -273,6 +285,8 @@ class Subway:
                 frequency -> int: 抢票失败后的重试次数
                 level -> str: 日志等级
                 name -> str: 当前用户名称
+                logPath -> str: 日志记录路径
+                logConf -> str: 日志配置路径
         :return: 返回是否抢票成功
         """
         _start = kwargs.pop('startTime', 0)
@@ -284,7 +298,13 @@ class Subway:
         frequency = kwargs.pop('frequency', 7)
         level = kwargs.pop('level', 'INFO')
         kwargs['result'] = True
-        _logger = logger.LoggingOutput(level, True, progress=True)
+        _logger = logger.LoggingOutput(
+            level,
+            log_path=kwargs.pop('logPath'),
+            log_conf=kwargs.pop('logConf', None),
+            handle=True,
+            progress=True
+        )
         _metro = metro.Metro(token, _logger)
         name = kwargs.get('name')
 

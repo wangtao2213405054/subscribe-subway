@@ -30,22 +30,25 @@ _LEVEL = dict(
 class LoggingOutput:
     """ 二次封装了一下 logging 方法, 支持 customtkinter.CTkTextbox 数据传递 """
 
-    def __init__(self, level, handle=None, progress=False):
+    def __init__(self, level, log_path=None, log_conf=None, handle=None, progress=False):
         self.level = _LEVEL.get(level)
         self.handle = handle
         self.progress = progress
         self._format = '%Y-%m-%d %H:%M:%S'
-        base_conf = self._get_conf()
+        base_conf = self._get_conf() if log_conf is None else log_conf
         self.log_list = []
         if not os.path.exists(base_conf):
             return
 
-        _path = os.path.abspath(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'log.log'))
+        if log_path is None:
+            log_path = os.path.abspath(
+                os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'log.log')
+            )
 
         with open(base_conf, 'r', encoding='utf-8') as file:
             read_data = json.loads(file.read())
             read_data['root']['level'] = level
-            read_data['handlers']['file']['filename'] = _path
+            read_data['handlers']['file']['filename'] = log_path
 
         config.dictConfig(read_data)
 
@@ -56,7 +59,7 @@ class LoggingOutput:
         :return:
         """
         conf_path = os.path.abspath(os.path.join(
-            os.path.dirname(__file__),
+            os.path.dirname(os.path.abspath(__file__)),
             'conf',
             'log.json'
         ))
@@ -102,6 +105,6 @@ class LoggingOutput:
 
 
 if __name__ == '__main__':
-    obj = LoggingOutput(INFO)
+    obj = LoggingOutput(INFO, 'log.log')
     for item in range(10):
         obj.info('Test')
