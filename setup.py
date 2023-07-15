@@ -7,7 +7,7 @@ setup(
     name='subscribe-subway-capital',
     description='北京地铁进站预约程序',
     url='https://github.com/wangtao2213405054/subscribe-subway',
-    version='1.0.0',
+    version='1.2.0',
     packages=find_packages(),
     include_package_data=True,
     zip_safe=False,
