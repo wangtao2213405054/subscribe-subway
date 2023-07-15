@@ -13,6 +13,9 @@ setup(
     zip_safe=False,
     install_requires=[
         'requests',
-        'click'
+        'click',
+        'customtkinter',
+        'chinesecalendar',
+        'urllib3'
     ]
 )

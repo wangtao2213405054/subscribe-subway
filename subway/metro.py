@@ -17,8 +17,9 @@ FORMAT = '%Y%m%d'  # 格式化时间
 class Metro:
     """ 地铁相关接口 """
 
-    def __init__(self, token):
+    def __init__(self, token, logger=None):
         self.token = token  # 地铁系统的 Authorization 字段
+        self.logger = logger if logger is None else logging
 
     def request(self, method: str, uri: str, **kwargs) -> Union[Dict, List, str, int, None]:
         """
@@ -42,23 +43,23 @@ class Metro:
             Authorization=self.token,
             Referer='https://webui.mybti.cn/'
         )
-        logging.debug(f'请求信息: {uri}')
-        logging.debug(f'{kwargs.get("json")}')
+        self.logger.debug(f'请求信息: {uri}')
+        self.logger.debug(f'{kwargs.get("json")}')
 
         try:
             response = requests.request(method, url, headers=header, **kwargs)
 
             if response.status_code != 200:
                 _message = f'服务器内部错误, 接口: {uri} 状态码: {response.status_code}'
-                logging.error(_message)
+                self.logger.error(_message)
                 return default
 
             body = response.json()
-            logging.debug(f'响应信息: {body}')
+            self.logger.debug(f'响应信息: {body}')
             return body
 
         except _error:
-            logging.debug(traceback.format_exc())
+            self.logger.debug(traceback.format_exc())
             return {}
 
     def shakedown(self, **kwargs) -> bool:

@@ -18,7 +18,7 @@ class DingTalk:
     详情请看钉钉开放平台官网: https://open.dingtalk.com/document/group/custom-robot-access
     """
 
-    def __init__(self, webhook, secret=None, mobile: list = None, user: list = None, own: bool = False):
+    def __init__(self, webhook, secret=None, mobile: list = None, user: list = None, own: bool = False, **kwargs):
         """
         发送钉钉机器人消息
         :param webhook: 群机器人的 webhook
@@ -26,6 +26,8 @@ class DingTalk:
         :param mobile: 通过手机号 @ 群聊中的人 [mobile, ....]
         :param user: 通过用户id @ 群聊中的人 [id, ...]
         :param own: 是否 @ 所有人
+        :param kwargs:
+                logger -> Type: <logger.LoggingOutput> 类
         """
         self.url = webhook
         self.body = {
@@ -34,6 +36,7 @@ class DingTalk:
         if secret:
             timestamp, sign = self.sign(secret)
             self.url += f'&timestamp={timestamp}&sign={sign}'
+        self.logger = kwargs.pop('logger')
 
     @staticmethod
     def sign(secret) -> Tuple[str, str]:
@@ -54,20 +57,20 @@ class DingTalk:
         try:
             response = requests.request('POST', self.url, json=self.body)
             if response.status_code != 200:
-                logging.error(f'发送机器人信息失败, 服务状态码 "{response.status_code}"')
+                self.logger.error(f'发送机器人信息失败, 服务状态码 "{response.status_code}"')
                 return
 
             errcode = response.json().get('errcode')
             errmsg = response.json().get('errmsg')
             if errcode != 0:
-                logging.error(f'发送机器人信息失败, 错误信息: {errmsg}')
+                self.logger.error(f'发送机器人信息失败, 错误信息: {errmsg}')
                 return
 
-            logging.info('钉钉机器人消息发送成功')
+            self.logger.info('钉钉机器人消息发送成功')
             return response.json()
 
         except Exception as e:
-            logging.error(f'发送机器人信息报错: {e}')
+            self.logger.error(f'发送机器人信息报错: {e}')
 
     def text(self, text: str) -> requests.request:
         """

@@ -3,10 +3,10 @@
 
 from typing import Optional, Tuple, Type
 
+import chinese_calendar
 import multiprocessing
 import threading
 import datetime
-import logging
 import click
 import time
 import json
@@ -14,12 +14,13 @@ import sys
 import os
 
 
+_TIME_FORMAT = '%Y-%m-%d'
+
 # 检查项目目录完整性
 try:
     sys.path.append(os.path.dirname(os.path.dirname(__file__)))
     from subway import metro, utils, logger, message
 except ImportError as e:
-    logging.error('请确保运行路径正确 ...')
     raise ImportError('请进入项目路径 subscribe-subway/subway 目录运行此脚本')
 
 
@@ -45,13 +46,17 @@ class Subway:
                 processes -> int: 进程池最多同时运行的数量
                 dingTalk -> bool: 是否启动钉钉机器人通知
                 confPath -> str: 配置文件路径
+                app -> Type: 如果通过 app 启动则传递 <customtkinter.CTkTextbox> 类
+                level -> str: 日志等级
         :return:
         """
-        logger.logger(logger.INFO)
         self.subscribe_time = kwargs.pop('subscribeTime', [12, 20])
         self.processes = kwargs.pop('processes', 5)
         self.dingtalk = kwargs.pop('dingTalk', False)
         self.filename = kwargs.pop('confPath', None)
+        self.app = kwargs.pop('app', None)
+        self.logger_level = kwargs.pop('level', 'INFO')
+        self.logger = logger.LoggingOutput(self.logger_level, handle=self.app if self.app is not None else None)
 
         # 如果未指定配置文件则使用默认配置文件
         if self.filename is None:
@@ -68,8 +73,8 @@ class Subway:
         self.file_content: str = self._read_file_content()
 
         # 检查文件配置是否符合规范
-        assert self._check_content(self.file_content)
-
+        _result, _message = self._check_content(self.file_content)
+        assert _result, _message
         # 检查 钉钉内容
         if self.dingtalk:
             self._check_dingtalk()
@@ -98,9 +103,13 @@ class Subway:
         """
         检查钉钉机器人的 Token 和 签名是否存在
         """
-        content: dict = json.loads(self.file_content)
-        token, sign = content.get('dingTalkToken'), content.get('dingTalkSign')
-        assert token and sign, '未配置钉钉 webhook 或 sign'
+        try:
+            content: dict = json.loads(self.file_content)
+            token, sign = content.get('dingTalkToken'), content.get('dingTalkSign')
+            assert token and sign, '未配置钉钉 webhook 或 sign'
+        except AssertionError as e:
+            self.logger.error('未配置钉钉 webhook 或 sign')
+            raise e
 
     def _check_content(self, content: str) -> Tuple[bool, Type[Exception]]:
         """
@@ -140,7 +149,7 @@ class Subway:
 
             return True, Exception
         except (ValueError, AssertionError) as e:
-            logging.debug(f'校验 conf 文件内容失败: {e}')
+            self.logger.error(f'校验 conf 文件内容失败: {e}')
             return False, e
 
     def async_task(self) -> None:
@@ -174,11 +183,11 @@ class Subway:
                 microseconds=now.microsecond
             )
             tomorrow = (today + datetime.timedelta(days=1))
-            logging.debug(f'今日: {today.strftime(metro.FORMAT)} 明日: {tomorrow.strftime(metro.FORMAT)}')
+            self.logger.debug(f'今日: {today.strftime(_TIME_FORMAT)} 明日: {tomorrow.strftime(_TIME_FORMAT)}')
 
             # 如果为节假日则不需要进行抢票
-            if utils.holiday(tomorrow.strftime(metro.FORMAT)):
-                logging.info('明天是节假日, 不需要抢票哦~')
+            if chinese_calendar.is_holiday(tomorrow):
+                self.logger.info('明天是节假日, 不需要抢票哦~')
                 utils.timer(tomorrow.timestamp())
                 continue
 
@@ -188,17 +197,19 @@ class Subway:
                 runtime = (today + datetime.timedelta(hours=item)).timestamp()
                 if time.time() < runtime:
                     start_time = runtime
-                    logging.info(f'准备今天 {item} 抢明天的票!')
+                    self.logger.warning(f'准备今天 {item} 抢明天的票!')
                     break
+
+            # start_time = time.time() + 20  # 调试代码段
 
             # 如果当前运行时间已经超出了抢票时间则明天运行, 并初始化用户列表
             if start_time is None:
                 ticket.clear()  # 当前结束后清空数据
-                logging.info('已经错过今天抢票时间, 明天开始抢票~')
+                self.logger.info('已经错过今天抢票时间, 明天开始抢票~')
                 utils.timer(tomorrow.timestamp())
                 continue
 
-            logging.debug(f'下次抢票时间为: {time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(start_time))}')
+            self.logger.debug(f'下次抢票时间为: {time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(start_time))}')
             utils.timer(start_time - 10)
 
             # 启动进程池
@@ -206,7 +217,6 @@ class Subway:
             task_result = []
             users = json.loads(self.file_content).get('userAgent')
             for item in users:
-
                 # 忽略用户
                 if item.get('shakedown'):
                     continue
@@ -220,6 +230,7 @@ class Subway:
                     continue
 
                 item['startTime'] = start_time
+                item['level'] = self.logger_level
                 result = pool.apply_async(self.task, kwds=item)
                 task_result.append(result)
 
@@ -230,17 +241,22 @@ class Subway:
 
             for item in _result:
 
+                if self.app:
+                    _logger_list = item.get('loggerList', [])
+                    for __logger in _logger_list:
+                        self.logger.message(*__logger)
+
                 # 如果存在用户未抢到票, 则重置用户列表, 进行下次尝试
                 if item.get('result'):
                     ticket.append(item.get('name'))
 
                 _message = f'{item.get("name")}抢票: {"成功" if item.get("result") else "失败"}'
-                logging.info(_message)
+                self.logger.info(_message)
 
                 if self.dingtalk:
                     _conf_data = json.loads(self.file_content)
                     _token, _sign = _conf_data.get('dingTalkToken'), _conf_data.get('dingTalkSign')
-                    _ding = message.DingTalk(_token, _sign)
+                    _ding = message.DingTalk(_token, _sign, logger=self.logger)
                     _ding.text(_message)
 
     @staticmethod
@@ -255,9 +271,10 @@ class Subway:
                 token -> str: 地铁系统的 Authorization 字段
                 interval -> Union[int, float]: 抢票失败后的重试间隔
                 frequency -> int: 抢票失败后的重试次数
+                level -> str: 日志等级
+                name -> str: 当前用户名称
         :return: 返回是否抢票成功
         """
-        logger.logger(logger.INFO)
         _start = kwargs.pop('startTime', 0)
         _line = kwargs.pop('lineName', '昌平线')
         _station = kwargs.pop('stationName', '沙河站')
@@ -265,14 +282,16 @@ class Subway:
         token = kwargs.pop('token', None)
         interval = kwargs.pop('interval', 1)
         frequency = kwargs.pop('frequency', 7)
+        level = kwargs.pop('level', 'INFO')
         kwargs['result'] = True
-
-        _metro = metro.Metro(token)
+        _logger = logger.LoggingOutput(level, True, progress=True)
+        _metro = metro.Metro(token, _logger)
+        name = kwargs.get('name')
 
         # 如果已存在当前时段的预约则终止
         exist = _metro.appointment(stationName=_station, arrivalTime=time_slot, timeout=2)
         if exist:
-            logging.info('检测到已存在预约, 终止程序')
+            _logger.info('检测到已存在预约, 终止程序')
             return kwargs
 
         utils.timer(_start)
@@ -280,7 +299,7 @@ class Subway:
         for item in range(frequency):
             _balance = _metro.balance(stationName=_station, timeSlot=time_slot)
             if _balance or not item:
-                logging.info(f'{_station}-{time_slot} 时段存在余票, 准备抢票')
+                _logger.info(f'{_station}-{time_slot} 时段存在余票, 准备抢票')
 
                 thread_list = []
                 for _ in range(3):
@@ -298,15 +317,18 @@ class Subway:
                 if result:
                     break
             else:
-                logging.info(f'{_station}-{time_slot} 时段已经没有余票了...')
+                _logger.info(f'{_station}-{time_slot} 时段已经没有余票了...')
             time.sleep(interval)
 
         else:
-            logging.info(f'程序运行了 {frequency} 次, 没有抢到票...')
+            _logger.info(f'程序运行了 {frequency} 次, 没有抢到票...')
             kwargs['result'] = False
 
         # 由于高峰期接口容易超时, 最后程序运行完成后再进行一次断言
         kwargs['result'] = _metro.appointment(stationName=_station, arrivalTime=time_slot)
+        _logger.log_list.insert(0, [f'↘↘↘↘↘↘↘↘↘↘ {name} ↙↙↙↙↙↙↙↙↙↙', logger.WARNING, 'warning'])
+        _logger.log_list.append([f'↗↗↗↗↗↗↗↗↗↗ {name} ↖↖↖↖↖↖↖↖↖↖', logger.WARNING, 'warning'])
+        kwargs['loggerList'] = _logger.log_list
         return kwargs
 
     def notification(self) -> None:
@@ -324,7 +346,7 @@ class Subway:
             conf: dict = json.loads(self.file_content)
             users = conf.get('userAgent')
             token, sign = conf.get('dingTalkToken'), conf.get('dingTalkSign')
-            ding = message.DingTalk(token, sign)
+            ding = message.DingTalk(token, sign, logger=self.logger)
 
             # 遍历用户列表
             for user in users:
@@ -333,7 +355,7 @@ class Subway:
 
                 # shakedown 视为废弃用户, 跳过消息
                 if user.get('shakedown'):
-                    logging.debug(f'{user_name} shakedown 参数为 True')
+                    self.logger.debug(f'{user_name} shakedown 参数为 True')
                     continue
 
                 # 检查用户是否符合发送条件
@@ -341,11 +363,11 @@ class Subway:
 
                 # 如果不需要则跳过此用户
                 if whether is None:
-                    logging.debug(f'{user_name} 不需要发送通知')
+                    self.logger.debug(f'{user_name} 不需要发送通知')
                     continue
 
                 ding.text(whether)
-                logging.info(whether)
+                self.logger.warning(whether)
 
             # 定时器为明天 10 点
             now = datetime.datetime.now()
@@ -369,12 +391,12 @@ class Subway:
 
         # 如果用户的 Key 不存在于通知容器中则添加
         if key not in self.user_notification:
-            logging.debug(f'{key} 没有在用户容器中')
+            self.logger.debug(f'{key} 没有在用户容器中')
             self.user_notification[key] = None
 
         # 如果用户容器中的 Key 类型不是 dict 则进行初始化
         if not isinstance(self.user_notification[key], dict):
-            logging.debug(f'{key} 用户在容器中未发送过任何通知')
+            self.logger.debug(f'{key} 用户在容器中未发送过任何通知')
             self.user_notification[key] = dict(
                 overdue=True,
                 warning=True
@@ -400,7 +422,7 @@ class Subway:
             new_content = self._read_file_content()
             _result, _message = self._check_content(new_content)
             if new_content != self.file_content and _result:
-                logging.info('文件发生变化')
+                self.logger.info('文件发生变化')
 
                 # 处理文件内容变化的逻辑
                 self.file_content = new_content
@@ -414,6 +436,7 @@ __subscribe = '设置抢票时间段, 官方提示为每日12点、20点方法�
 __processes = '进程池最多同时运行的数量, 默认最多同时启动 5 个线程'
 __dingtalk = '是否启动钉钉机器人通知, 启动为 1 , 默认不启动 0, 如需启动请在配置文件中指定钉钉机器人的 webhook 和 sign'
 __path = '指定的配置文件路径, 如不指定则使用项目下 conf/conf.json 文件'
+__level = '日志等级, 可选值为 INFO, DEBUG'
 
 
 @click.command()
@@ -421,11 +444,14 @@ __path = '指定的配置文件路径, 如不指定则使用项目下 conf/conf.
 @click.option('--processes', '-ps', help=__processes, default=5)
 @click.option('--dingtalk', '-dt', help=__dingtalk, default=0)
 @click.option('--path', '-p', help=__path, default='')
-def command(subscribe: str, processes: int, dingtalk: int, path: str) -> None:
+@click.option('--level', '-l', help=__level, default='INFO')
+def command(subscribe: str, processes: int, dingtalk: int, path: str, level: str) -> None:
     subscribe = list(map(lambda x: int(x), subscribe.split(',')))
     dingtalk = bool(dingtalk)
     path = path if path else None
-    Subway(subscribeTime=subscribe, processes=processes, dingTalk=dingtalk, confPath=path).run()
+    level_list = ['INFO', 'DEBUG']
+    level = 'INFO' if level.upper() not in level_list else level
+    Subway(subscribeTime=subscribe, processes=processes, dingTalk=dingtalk, confPath=path, level=level).run()
 
 
 if __name__ == '__main__':
