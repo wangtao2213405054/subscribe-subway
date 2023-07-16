@@ -1,0 +1,12 @@
+{
+  "title": "SubwayTkinter",
+  "icon": "images/icon.png",
+  "background": "",
+  "contents": [
+    { "x": 192, "y": 120, "type": "file", "path": "dist/SubwayTkinter.app" },
+    { "x": 448, "y": 120, "type": "link", "path": "/Applications" }
+  ],
+  "window": {
+    "size": { "width": 660, "height": 300 }
+  }
+}
