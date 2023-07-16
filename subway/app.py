@@ -11,7 +11,7 @@ import sys
 import os
 
 try:
-    sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+    sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     from subway.main import Subway
     from subway import utils
 except ImportError as e:
@@ -32,7 +32,7 @@ class APP(customtkinter.CTk):
         super(APP, self).__init__()
         self.subway_threading = None  # 创建抢票线程对象
         self.set_windows()
-        self.log_path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'log.log'))
+        self.log_path = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'log.log'))
 
         # 设置权重
         self.grid_columnconfigure(1, weight=1)
@@ -75,8 +75,12 @@ class APP(customtkinter.CTk):
                     dingTalk=bool(self.sidebar_frame.dingtalk_switch.get()),
                     app=self.textbox,
                     level=self.sidebar_frame.logger_select.get(),
-                    confPath=os.path.abspath(os.path.join(os.path.dirname(__file__), 'conf', 'conf.json')),
-                    logConf=os.path.abspath(os.path.join(os.path.dirname(__file__), 'conf', 'log.json')),
+                    confPath=os.path.abspath(
+                        os.path.join(os.path.dirname(os.path.abspath(__file__)), 'conf', 'conf.json')
+                    ),
+                    logConf=os.path.abspath(
+                        os.path.join(os.path.dirname(os.path.abspath(__file__)), 'conf', 'log.json')
+                    ),
                     logPath=self.log_path
                 ).run,
                 daemon=True
@@ -176,7 +180,7 @@ class ConfigWindow(customtkinter.CTkToplevel):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.conf_path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'conf', 'conf.json'))
+        self.conf_path = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'conf', 'conf.json'))
 
         # 设置窗口信息
         self.set_windows()

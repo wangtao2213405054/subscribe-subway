@@ -42,7 +42,7 @@ class LoggingOutput:
 
         if log_path is None:
             log_path = os.path.abspath(
-                os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'log.log')
+                os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(os.path.abspath(__file__)))), 'log.log')
             )
 
         with open(base_conf, 'r', encoding='utf-8') as file:
@@ -59,7 +59,7 @@ class LoggingOutput:
         :return:
         """
         conf_path = os.path.abspath(os.path.join(
-            os.path.dirname(os.path.abspath(__file__)),
+            os.path.dirname(os.path.abspath(os.path.abspath(__file__))),
             'conf',
             'log.json'
         ))

@@ -15,7 +15,7 @@
 # import os
 #
 # try:
-#     sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+#     sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 #     from subway import metro, utils, logger, message
 # except ImportError as e:
 #     logging.error('请确保运行路径正确 ...')
@@ -29,7 +29,7 @@
 #     :return:
 #     """
 #     conf_path = os.path.abspath(os.path.join(
-#         os.path.dirname(__file__),
+#         os.path.dirname(os.path.abspath(__file__)),
 #         'conf',
 #         'conf.json'
 #     )) if path is None else path

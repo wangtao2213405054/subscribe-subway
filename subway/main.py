@@ -18,7 +18,7 @@ _TIME_FORMAT = '%Y-%m-%d'
 
 # 检查项目目录完整性
 try:
-    sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+    sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     from subway import metro, utils, logger, message
 except ImportError as e:
     raise ImportError('请进入项目路径 subscribe-subway/subway 目录运行此脚本')
@@ -69,7 +69,7 @@ class Subway:
         # 如果未指定配置文件则使用默认配置文件
         if self.filename is None:
             self.filename = os.path.abspath(os.path.join(
-                os.path.dirname(__file__),
+                os.path.dirname(os.path.abspath(__file__)),
                 'conf',
                 'conf.json'
             ))
