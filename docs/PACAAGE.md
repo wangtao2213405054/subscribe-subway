@@ -17,18 +17,35 @@ PyInstaller是一个常用的工具，可以将Python代码和相关依赖项打
    cd /xx/subscribe-subway
     ```
 3. 执行打包命令:
+   
+   Mac OS 执行以下命令:
     ```bash
     pyinstaller -D -w --add-data "subway/conf:conf" --name SubwayTkinter --icon images/icon.png subway/app.py
     ```
+   Windows 执行以下命令:
+   
+   您必须使用`--add-data` 选项手动包含 `customtkinter` `chinese_calendar` 目录。因为出于某种原因，pyinstaller 不会自动包含库中的 .json 等数据文件。您可以使用以下命令找到 `customtkinter` `chinese_calendar` 库的安装位置
+   ```bash
+   pip show customtkinter
+   pip show chinese_calendar
+   ```
+   将显示一个位置，例如：`C:/Users/User/AppData/Local/Programs/Python/Python311-32/Lib/site-packages`
+   
+   然后添加库文件夹，如下所示：`--add-data "C:/Users/User/AppData/Local/Programs/Python/Python311-32/Lib/site-packages/customtkinter;customtkinter"`
+   
+   需要注意的是, 你需要将 `customtkinter` `chinese_calendar` 都添加上。以下是完整的命令:
+   ```bash
+   pyinstaller -D -w --add-data "subway/conf;conf" --add-data "C:/Users/User/AppData/Local/Programs/Python/Python311-32/Lib/site-packages/chinese_calendar;chinese_calendar" --add-data "C:/Users/User/AppData/Local/Programs/Python/Python311-32/Lib/site-packages/customtkinter;customtkinter" --name SubwayTkinter --icon images/icon.ico subway/app.py
+   ```
    - `--add-data` 指定配置文件并在可执行文件中以 conf 命名
    - `subway/app.py` 要打包的Python脚本的文件名
    - `--name` 打包后生产的 app 名称
    - `--icon` 打包后应用的 icon
    - `-D` 生成目录模式
    - `-w` 生成窗口模式
-4. 完成后，将在项目目录下生成一个dist目录，其中包含了打包好的可执行文件。
+5. 完成后，将在项目目录下生成一个dist目录，其中包含了打包好的可执行文件。
 
-5. 测试可执行文件：
+6. 测试可执行文件：
 在打包过程中，PyInstaller将自动处理依赖项并将其打包到可执行文件中。
 现在，您可以测试可执行文件，确保它在原始环境中正常运行，并且在打包后的可执行文件中也能正常工作。
 

@@ -180,6 +180,7 @@ class ConfigWindow(customtkinter.CTkToplevel):
 
         # 设置窗口信息
         self.set_windows()
+        self.attributes('-topmost', True)  # 在 Windows 上打开窗口后会在当前窗口的下层, 将其置顶
         self.user_index = 1
         # 设置权重
         self.grid_columnconfigure(0, weight=1)

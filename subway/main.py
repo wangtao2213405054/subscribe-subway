@@ -117,9 +117,9 @@ class Subway:
             content: dict = json.loads(self.file_content)
             token, sign = content.get('dingTalkToken'), content.get('dingTalkSign')
             assert token and sign, '未配置钉钉 webhook 或 sign'
-        except AssertionError as e:
+        except AssertionError as error:
             self.logger.error('未配置钉钉 webhook 或 sign')
-            raise e
+            raise error
 
     def _check_content(self, content: str) -> Tuple[bool, Type[Exception]]:
         """
@@ -158,9 +158,9 @@ class Subway:
                 assert self._check_token(user.get('token')), f'{head} userAgent 的 {tooltip} Token 已过期{tail}'
 
             return True, Exception
-        except (ValueError, AssertionError) as e:
-            self.logger.error(f'校验 conf 文件内容失败: {e}')
-            return False, e
+        except (ValueError, AssertionError) as error:
+            self.logger.error(f'校验 conf 文件内容失败: {error}')
+            return False, error
 
     def async_task(self) -> None:
         """
