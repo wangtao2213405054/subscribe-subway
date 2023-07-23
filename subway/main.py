@@ -60,6 +60,7 @@ class Subway:
         self.logger_level = kwargs.pop('level', 'INFO')
         self.log_path = kwargs.pop('logPath', None)
         self.log_conf = kwargs.pop('logConf', None)
+        self.ticket = list()
         self.logger = logger.LoggingOutput(
             self.logger_level,
             log_path=self.log_path,
@@ -181,9 +182,6 @@ class Subway:
         # 启动异步程序
         self.async_task()
 
-        # 当天的抢票状态
-        ticket = list()
-
         while True:
             now = datetime.datetime.now()
             today = now - datetime.timedelta(
@@ -210,11 +208,11 @@ class Subway:
                     self.logger.warning(f'准备今天 {item} 抢明天的票!')
                     break
 
-            # start_time = time.time() + 20  # 调试代码段
+            start_time = time.time() + 15  # 调试代码段
 
             # 如果当前运行时间已经超出了抢票时间则明天运行, 并初始化用户列表
             if start_time is None:
-                ticket.clear()  # 当前结束后清空数据
+                self.ticket.clear()  # 当前结束后清空数据
                 self.logger.info('已经错过今天抢票时间, 明天开始抢票~')
                 utils.timer(tomorrow.timestamp())
                 continue
@@ -236,12 +234,12 @@ class Subway:
                     continue
 
                 # 如果用户当前已经抢票成功则忽略
-                if item.get('name') in ticket:
+                if item.get('name') in self.ticket:
                     continue
 
                 item['startTime'] = start_time
                 item['level'] = self.logger_level
-                item['logPath'] = self.log_path,
+                item['logPath'] = self.log_path
                 item['logConf'] = self.log_conf
                 result = pool.apply_async(self.task, kwds=item)
                 task_result.append(result)
@@ -260,7 +258,7 @@ class Subway:
 
                 # 如果存在用户未抢到票, 则重置用户列表, 进行下次尝试
                 if item.get('result'):
-                    ticket.append(item.get('name'))
+                    self.ticket.append(item.get('name'))
 
                 _message = f'{item.get("name")}抢票: {"成功" if item.get("result") else "失败"}'
                 self.logger.info(_message)
@@ -298,9 +296,10 @@ class Subway:
         frequency = kwargs.pop('frequency', 7)
         level = kwargs.pop('level', 'INFO')
         kwargs['result'] = True
+        log_path = kwargs.pop('logPath', None)
         _logger = logger.LoggingOutput(
             level,
-            log_path=kwargs.pop('logPath'),
+            log_path=log_path,
             log_conf=kwargs.pop('logConf', None),
             handle=True,
             progress=True
@@ -447,6 +446,7 @@ class Subway:
                 # 处理文件内容变化的逻辑
                 self.file_content = new_content
                 self.user_notification.clear()
+                self.ticket.clear()
 
             # 每隔一段时间检查一次文件内容变化
             time.sleep(interval)
