@@ -208,7 +208,7 @@ class Subway:
                     self.logger.warning(f'准备今天 {item} 抢明天的票!')
                     break
 
-            start_time = time.time() + 15  # 调试代码段
+            # start_time = time.time() + 15  # 调试代码段
 
             # 如果当前运行时间已经超出了抢票时间则明天运行, 并初始化用户列表
             if start_time is None:
