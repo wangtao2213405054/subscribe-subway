@@ -7,16 +7,16 @@
       "stationName": "沙河站",
       "timeSlot": "0720-0730",
       "name": "Coke",
-      "shakedown": false,
-      "token": "NmIyMjYyOGUtMzI5Zi00MzYwLWIwMjQtNzM3ZjEyNTAwZjU5LDE2ODk1NTY4MjU1NDksQkcyQ240ckZDVFZHZ0JpYlEyTnVsdUVCVzVnPQ=="
+      "shakedown": true,
+      "token": "NmIyMjYyOGUtMzI5Zi00MzYwLWIwMjQtNzM3ZjEyNTAwZjU5LDE2OTA0MTg0NzA4NjEsYWM1U09lTGZvMWJ5K3lRdUIvZm1kQ3BDb0QwPQ=="
     },
     {
       "lineName": "5号线",
       "stationName": "天通苑站",
       "timeSlot": "0750-0800",
-      "name": "TestTwo",
-      "shakedown": true,
-      "token": ""
+      "name": "测试用户",
+      "shakedown": false,
+      "token": "NmIyMjYyOGUtMzI5Zi00MzYwLWIwMjQtNzM3ZjEyNTAwZjU5LDE2OTA0MTg0NzA4NjEsYWM1U09lTGZvMWJ5K3lRdUIvZm1kQ3BDb0QwPQ=="
     }
   ]
 }
