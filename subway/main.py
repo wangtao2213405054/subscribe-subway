@@ -14,7 +14,7 @@ import sys
 import os
 
 
-_TIME_FORMAT = '%Y-%m-%d'
+TIME_FORMAT = '%Y-%m-%d'
 
 # 检查项目目录完整性
 try:
@@ -76,7 +76,7 @@ class Subway:
             ))
 
         self.logger.debug(f'日志文件路径: {self.log_path}')
-        self.logger.debug(f'配置文件路径{self.filename}')
+        self.logger.debug(f'配置文件路径: {self.filename}')
         # 判断文件是否存在
         assert os.path.exists(self.filename), '配置文件路径不正确, 请检查'
 
@@ -191,7 +191,7 @@ class Subway:
                 microseconds=now.microsecond
             )
             tomorrow = (today + datetime.timedelta(days=1))
-            self.logger.debug(f'今日: {today.strftime(_TIME_FORMAT)} 明日: {tomorrow.strftime(_TIME_FORMAT)}')
+            self.logger.debug(f'今日: {today.strftime(TIME_FORMAT)} 明日: {tomorrow.strftime(TIME_FORMAT)}')
 
             # 如果为节假日则不需要进行抢票
             if chinese_calendar.is_holiday(tomorrow):
@@ -208,7 +208,7 @@ class Subway:
                     self.logger.warning(f'准备今天 {item} 抢明天的票!')
                     break
 
-            # start_time = time.time() + 15  # 调试代码段
+            start_time = time.time() + 15  # 调试代码段
 
             # 如果当前运行时间已经超出了抢票时间则明天运行, 并初始化用户列表
             if start_time is None:
@@ -220,36 +220,9 @@ class Subway:
             self.logger.debug(f'下次抢票时间为: {time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(start_time))}')
             utils.timer(start_time - 10)
 
-            # 启动进程池
-            pool = multiprocessing.Pool(self.processes)
-            task_result = []
-            users = json.loads(self.file_content).get('userAgent')
-            for item in users:
-                # 忽略用户
-                if item.get('shakedown'):
-                    continue
+            result = self.start_task(start_time)
 
-                # 如果用户 Token 已经过期则忽略此用户
-                if not self._check_token(item.get('token')):
-                    continue
-
-                # 如果用户当前已经抢票成功则忽略
-                if item.get('name') in self.ticket:
-                    continue
-
-                item['startTime'] = start_time
-                item['level'] = self.logger_level
-                item['logPath'] = self.log_path
-                item['logConf'] = self.log_conf
-                result = pool.apply_async(self.task, kwds=item)
-                task_result.append(result)
-
-            pool.close()
-            pool.join()
-
-            _result = list(map(lambda x: x.get(), task_result))
-
-            for item in _result:
+            for item in result:
 
                 if self.app:
                     _logger_list = item.get('loggerList', [])
@@ -269,8 +242,43 @@ class Subway:
                     _ding = message.DingTalk(_token, _sign, logger=self.logger)
                     _ding.text(_message)
 
+    def task_continue(self, item: dict) -> bool:
+        # 忽略用户
+        if item.get('shakedown'):
+            return True
+
+        # 如果用户 Token 已经过期则忽略此用户
+        if not self._check_token(item.get('token')):
+            return True
+
+        # 如果用户当前已经抢票成功则忽略
+        if item.get('name') in self.ticket:
+            return True
+
+    def start_task(self, start_time: float) -> list:
+        # 启动进程池
+        pool = multiprocessing.Pool(self.processes)
+        task_result = []
+        for item in json.loads(self.file_content).get('userAgent'):
+
+            _continue = self.task_continue(item)
+            if _continue:
+                continue
+
+            item['startTime'] = start_time
+            item['level'] = self.logger_level
+            item['logPath'] = self.log_path
+            item['logConf'] = self.log_conf
+            result = pool.apply_async(self.task, kwds=dict(kwargs=item, subway_result=None))
+            task_result.append(result)
+
+        pool.close()
+        pool.join()
+
+        return list(map(lambda x: x.get(), task_result))
+
     @staticmethod
-    def task(**kwargs) -> dict:
+    def task(kwargs: dict, subway_result: list = None) -> dict:
         """
         执行抢票程序任务
         :param kwargs:
@@ -285,8 +293,10 @@ class Subway:
                 name -> str: 当前用户名称
                 logPath -> str: 日志记录路径
                 logConf -> str: 日志配置路径
+        :param subway_result: 线程存储信息数据表
         :return: 返回是否抢票成功
         """
+
         _start = kwargs.pop('startTime', 0)
         _line = kwargs.pop('lineName', '昌平线')
         _station = kwargs.pop('stationName', '沙河站')
@@ -304,19 +314,30 @@ class Subway:
             handle=True,
             progress=True
         )
-        _metro = metro.Metro(token, _logger)
+        _metro = metro.Metro(token)
         name = kwargs.get('name')
 
         # 如果已存在当前时段的预约则终止
         exist = _metro.appointment(stationName=_station, arrivalTime=time_slot, timeout=2)
         if exist:
             _logger.info('检测到已存在预约, 终止程序')
+            kwargs['loggerList'] = _logger.log_list
+            if subway_result is not None:
+                subway_result.append(kwargs)
+
             return kwargs
 
         utils.timer(_start)
 
         for item in range(frequency):
             _balance = _metro.balance(stationName=_station, timeSlot=time_slot)
+            exist = _metro.appointment(stationName=_station, arrivalTime=time_slot, timeout=2)
+
+            # 如果存在预约则终止
+            if exist:
+                _logger.info('抢票成功')
+                break
+
             if _balance or not item:
                 _logger.info(f'{_station}-{time_slot} 时段存在余票, 准备抢票')
 
@@ -329,10 +350,11 @@ class Subway:
                     ))
                     thread.start()
                     thread_list.append(thread)
+
                 for _thread in thread_list:
                     _thread.join()
 
-                result = _metro.appointment(stationName=_station, arrivalTime=time_slot, timeout=2)
+                result = _metro.appointment(stationName=_station, arrivalTime=time_slot, timeout=5)
                 if result:
                     break
             else:
@@ -348,6 +370,10 @@ class Subway:
         _logger.log_list.insert(0, [f'↘↘↘↘↘↘↘↘↘↘ {name} ↙↙↙↙↙↙↙↙↙↙', logger.WARNING, 'warning'])
         _logger.log_list.append([f'↗↗↗↗↗↗↗↗↗↗ {name} ↖↖↖↖↖↖↖↖↖↖', logger.WARNING, 'warning'])
         kwargs['loggerList'] = _logger.log_list
+
+        if subway_result is not None:
+            subway_result.append(kwargs)
+
         return kwargs
 
     def notification(self) -> None:

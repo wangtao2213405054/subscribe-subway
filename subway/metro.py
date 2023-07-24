@@ -19,7 +19,7 @@ class Metro:
 
     def __init__(self, token, logger=None):
         self.token = token  # 地铁系统的 Authorization 字段
-        self.logger = logger if logger is None else logging
+        self.logger = logger if logger is not None else logging
 
     def request(self, method: str, uri: str, **kwargs) -> Union[Dict, List, str, int, None]:
         """
@@ -59,7 +59,7 @@ class Metro:
             return body
 
         except _error:
-            self.logger.debug(traceback.format_exc())
+            # self.logger.debug(traceback.format_exc())
             return {}
 
     def shakedown(self, **kwargs) -> bool:
@@ -171,4 +171,4 @@ if __name__ == '__main__':
     data = {"lineName": '昌平线', "snapshotWeekOffset": 0, "stationName": '沙河站', "enterDate": '20230317',
             "snapshotTimeSlot": "0630-0930", "timeSlot": '0630-0640'}
     _metro = Metro(_token)
-    print(_metro.appointment(stationName='天通苑站', arrivalTime='0630-0650'))
+    print(_metro.appointment(timeSlot='0750-0800', stationName='天通苑站'))

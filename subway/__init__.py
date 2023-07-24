@@ -10,5 +10,8 @@ from . import (
 )
 from .main import (
     command,
-    Subway
+    Subway,
+    TIME_FORMAT
 )
+
+from .rewrite import RewriteSubway

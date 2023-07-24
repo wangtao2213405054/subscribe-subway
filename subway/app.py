@@ -12,8 +12,7 @@ import os
 
 try:
     sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    from subway.main import Subway
-    from subway import utils
+    from subway import utils, RewriteSubway
 except ImportError as e:
     raise ImportError('请进入项目路径 subscribe-subway/subway 目录运行此脚本')
 
@@ -69,23 +68,27 @@ class APP(customtkinter.CTk):
     def run_subway_task(self):
         """ 运行抢票任务 """
         if self.subway_threading is None or not self.subway_threading.is_alive():
-            self.subway_threading = threading.Thread(
-                target=Subway(
-                    subscribeTime=[12, 20],
-                    dingTalk=bool(self.sidebar_frame.dingtalk_switch.get()),
-                    app=self.textbox,
-                    level=self.sidebar_frame.logger_select.get(),
-                    confPath=os.path.abspath(
-                        os.path.join(os.path.dirname(os.path.abspath(__file__)), 'conf', 'conf.json')
-                    ),
-                    logConf=os.path.abspath(
-                        os.path.join(os.path.dirname(os.path.abspath(__file__)), 'conf', 'log.json')
-                    ),
-                    logPath=self.log_path
-                ).run,
-                daemon=True
-            )
-            self.subway_threading.start()
+            try:
+                self.subway_threading = threading.Thread(
+                    target=RewriteSubway(
+                        subscribeTime=[12, 20],
+                        dingTalk=bool(self.sidebar_frame.dingtalk_switch.get()),
+                        app=self.textbox,
+                        level=self.sidebar_frame.logger_select.get(),
+                        confPath=os.path.abspath(
+                            os.path.join(os.path.dirname(os.path.abspath(__file__)), 'conf', 'conf.json')
+                        ),
+                        logConf=os.path.abspath(
+                            os.path.join(os.path.dirname(os.path.abspath(__file__)), 'conf', 'log.json')
+                        ),
+                        logPath=self.log_path
+                    ).run,
+                    daemon=True
+                )
+                self.subway_threading.start()
+            except (Exception, PermissionError):
+                tkinter.messagebox.showerror('温馨提示', f'请以管理员身份打开, 或将应用安装在C盘外')
+                return
             threading.Thread(target=self.action_listener, daemon=True).start()  # 启动按钮监听事件
         else:
             tkinter.messagebox.showerror('温馨提示', '抢票任务已启动, 请勿重复点击！')
@@ -164,7 +167,7 @@ class SidebarView(customtkinter.CTkFrame):
     def open_log_file(self):
         """ 打开详细日志的钩子 """
         if sys.platform.startswith('win'):
-            subprocess.Popen(['start', self.log_path], shell=True)
+            os.startfile(self.log_path)
         elif sys.platform.startswith('darwin'):
             subprocess.Popen(['open', self.log_path])
         elif sys.platform.startswith('linux'):
@@ -292,8 +295,16 @@ class ConfigWindow(customtkinter.CTkToplevel):
             with open(self.conf_path, 'w', encoding='utf-8') as file:
                 file.write(json.dumps(self.default_json, indent=2, ensure_ascii=False))
 
+        try:
+            with open(self.conf_path, 'r', encoding='utf-8') as file:
+                json.loads(file.read())
+        except (Exception,):
+            with open(self.conf_path, 'w', encoding='utf-8') as file:
+                file.write(json.dumps(self.default_json, indent=2, ensure_ascii=False))
+
         with open(self.conf_path, 'r', encoding='utf-8') as file:
             conf = json.loads(file.read())
+
         self.webhook_input.insert(0, conf.get('dingTalkToken', ''))
         self.sign_input.insert(0, conf.get('dingTalkSign', ''))
         users = conf.get('userAgent', [])
@@ -353,13 +364,17 @@ class ConfigWindow(customtkinter.CTkToplevel):
             return
 
         # 将验证完成的数据写入 Json 文件中
-        with open(self.conf_path, 'w', encoding='utf-8') as file:
-            write_data = dict(
-                dingTalkToken=self.webhook_input.get(),
-                dingTalkSign=self.sign_input.get(),
-                userAgent=content
-            )
-            file.write(json.dumps(write_data, indent=2, ensure_ascii=False))
+        try:
+            with open(self.conf_path, 'w', encoding='utf-8') as file:
+                write_data = dict(
+                    dingTalkToken=self.webhook_input.get(),
+                    dingTalkSign=self.sign_input.get(),
+                    userAgent=content
+                )
+                file.write(json.dumps(write_data, indent=2, ensure_ascii=False))
+        except PermissionError:
+            tkinter.messagebox.showerror('温馨提示', f'请以管理员身份打开, 或将应用安装在C盘外')
+            return
 
         # 关闭弹窗
         if self.winfo_exists():
