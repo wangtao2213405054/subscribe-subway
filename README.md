@@ -36,7 +36,7 @@
 如果你需要使用纯代码模式，需要完成以下准备工作：
 
 1. 安装 Python3.9 及以上开发环境。
-2. 安装程序所需要的依赖库：requests、click。可通过( python setup.py install )安装所有依赖
+2. 安装程序所需要的依赖库：requests、click。可通过( `python setup.py install` )安装所有依赖
 3. 打开 [北京地铁预约页面](https://webui.mybti.cn/#/login) 抓取接口 Headers 中的 authorization 字段内容
 4. 配置 conf/conf.json 文件或者程序中指定自己的配置文件, 格式如下:
 ```json
@@ -81,7 +81,7 @@ shakedown = false // 如果 shakedown 参数为 true 则忽略此用户, 此用�
 ### 2.3 运行程序
 
 1. 打开控制台（Terminal）或命令行窗口。
-2. 进入程序所在目录的 subway 目录之中，并运行 `python main.py` 命令。(可通过运行 `python main.py --help` 命令查看所需参数)
+2. 进入程序所在目录的 `subscribe-subway` 目录之中，并运行 `python subway/main.py` 命令。(可通过运行 `python subway/main.py --help` 命令查看所需参数)
 3. 程序会在预约成功后发送钉钉通知，提醒用户到达地铁车站。
 
 ### 2.4 注意事项
