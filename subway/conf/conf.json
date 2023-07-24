@@ -1,21 +1,21 @@
 {
-  "dingTalkToken": "https://oapi.dingtalk.com/robot/send?access_token=31bd63a5c3fe130ec9d28f75acfe6b03a66b056d3a9cd8c5b8e5281acc1a4d4a",
-  "dingTalkSign": "SEC8a261e2b2457e4efc993f27fdd6d65579cbd6f7f75b83c06f84186d1707ce413",
+  "dingTalkToken": "",
+  "dingTalkSign": "",
   "userAgent": [
     {
       "lineName": "昌平线",
       "stationName": "沙河站",
       "timeSlot": "0720-0730",
-      "name": "Coke",
+      "name": "Test",
       "shakedown": false,
-      "token": "NmIyMjYyOGUtMzI5Zi00MzYwLWIwMjQtNzM3ZjEyNTAwZjU5LDE2ODk1NTY4MjU1NDksQkcyQ240ckZDVFZHZ0JpYlEyTnVsdUVCVzVnPQ=="
+      "token": ""
     },
     {
       "lineName": "5号线",
       "stationName": "天通苑站",
       "timeSlot": "0750-0800",
-      "name": "TestTwo",
-      "shakedown": true,
+      "name": "TestOne",
+      "shakedown": false,
       "token": ""
     }
   ]

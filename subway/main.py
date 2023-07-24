@@ -205,7 +205,7 @@ class Subway:
                 runtime = (today + datetime.timedelta(hours=item)).timestamp()
                 if time.time() < runtime:
                     start_time = runtime
-                    self.logger.warning(f'准备今天 {item} 抢明天的票!')
+                    self.logger.warning(f'准备今天 {item} 点抢明天({tomorrow.strftime(TIME_FORMAT)})的票!')
                     break
 
             # start_time = time.time() + 15  # 调试代码段
