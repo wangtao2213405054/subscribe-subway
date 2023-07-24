@@ -5,7 +5,6 @@ from typing import Union, Dict, List
 from requests.exceptions import ReadTimeout
 from urllib3.exceptions import ReadTimeoutError
 
-import traceback
 import datetime
 import requests
 import logging

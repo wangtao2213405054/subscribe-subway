@@ -15,7 +15,6 @@ setup(
         'requests',
         'click',
         'customtkinter',
-        'chinesecalendar',
-        'urllib3'
+        'chinesecalendar'
     ]
 )

@@ -7,6 +7,7 @@ import chinese_calendar
 import multiprocessing
 import threading
 import datetime
+import logging
 import click
 import time
 import json
@@ -61,12 +62,15 @@ class Subway:
         self.log_path = kwargs.pop('logPath', None)
         self.log_conf = kwargs.pop('logConf', None)
         self.ticket = list()
-        self.logger = logger.LoggingOutput(
-            self.logger_level,
-            log_path=self.log_path,
-            log_conf=self.log_conf,
-            handle=self.app if self.app is not None else None
-        )
+        try:
+            self.logger = logger.LoggingOutput(
+                self.logger_level,
+                log_path=self.log_path,
+                log_conf=self.log_conf,
+                handle=self.app if self.app is not None else None
+            )
+        except (Exception, ):
+            self.logger = logging
         # 如果未指定配置文件则使用默认配置文件
         if self.filename is None:
             self.filename = os.path.abspath(os.path.join(
@@ -227,7 +231,11 @@ class Subway:
                 if self.app:
                     _logger_list = item.get('loggerList', [])
                     for __logger in _logger_list:
-                        self.logger.message(*__logger)
+                        try:
+                            logger_message = getattr(self.logger, 'message')
+                            logger_message(*__logger)
+                        except AttributeError:
+                            break
 
                 # 如果存在用户未抢到票, 则重置用户列表, 进行下次尝试
                 if item.get('result'):
@@ -307,13 +315,16 @@ class Subway:
         level = kwargs.pop('level', 'INFO')
         kwargs['result'] = True
         log_path = kwargs.pop('logPath', None)
-        _logger = logger.LoggingOutput(
-            level,
-            log_path=log_path,
-            log_conf=kwargs.pop('logConf', None),
-            handle=True,
-            progress=True
-        )
+        try:
+            _logger = logger.LoggingOutput(
+                level,
+                log_path=log_path,
+                log_conf=kwargs.pop('logConf', None),
+                handle=True,
+                progress=True
+            )
+        except (Exception, ):
+            _logger = logging
         _metro = metro.Metro(token)
         name = kwargs.get('name')
 

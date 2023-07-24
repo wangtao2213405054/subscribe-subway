@@ -106,5 +106,6 @@ class LoggingOutput:
 
 if __name__ == '__main__':
     obj = LoggingOutput(INFO, 'log.log')
+    print(getattr(logging, 'message'))
     for item in range(10):
         obj.info('Test')
