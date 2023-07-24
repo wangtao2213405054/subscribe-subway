@@ -115,6 +115,7 @@ class SidebarView(customtkinter.CTkFrame):
         self.grid(row=0, column=0, rowspan=4, sticky="nsew")
         self.grid_rowconfigure(4, weight=1)
         self.log_path = log_path
+        self.master = master
         # 配置文件窗口
         self.config_window = None
 
@@ -154,7 +155,9 @@ class SidebarView(customtkinter.CTkFrame):
     def open_config_window(self):
         """ 打开配置文件窗口 """
         if self.config_window is None or not self.config_window.winfo_exists():
-            self.config_window = ConfigWindow(self)  # 如果窗口为 None 或已销毁，则创建窗口
+            self.config_window = ConfigWindow(self.master)  # 如果窗口为 None 或已销毁，则创建窗口
+            if sys.platform.startswith('win'):
+                self.config_window.grab_set()  # 解决了 windows 主窗口聚焦的问题
         else:
             self.config_window.focus()  # 如果窗口存在则打开他
 
@@ -177,14 +180,14 @@ class ConfigWindow(customtkinter.CTkToplevel):
     HEIGHT = 450
     NAME = '配置文件'
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, master, *args, **kwargs):
+        super().__init__(master, *args, **kwargs)
 
         self.conf_path = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'conf', 'conf.json'))
-
+        self.master = master
         # 设置窗口信息
         self.set_windows()
-        self.attributes('-topmost', True)  # 在 Windows 上打开窗口后会在当前窗口的下层, 将其置顶
+        # self.attributes('-topmost', True)  # 在 Windows 上打开窗口后会在当前窗口的下层, 将其置顶
         self.user_index = 1
         # 设置权重
         self.grid_columnconfigure(0, weight=1)
@@ -267,8 +270,6 @@ class ConfigWindow(customtkinter.CTkToplevel):
         )
         self.enter_button.grid(row=6, column=3, padx=(10, 20), pady=10, sticky="we")
 
-        # print(self.get_config_value())
-
     def set_windows(self):
         """ 设置窗口信息 """
         self.title(self.NAME)
@@ -337,6 +338,11 @@ class ConfigWindow(customtkinter.CTkToplevel):
         if self.winfo_exists():
             self.destroy()
 
+    def destroy(self):
+        if sys.platform.startswith('win'):
+            self.master.after(10, self.master.lift)
+        super().destroy()
+
     def command_enter_button(self):
         """ 确认按钮的钩子 """
         # 获取 Tabs 数据并验证其完整性
@@ -369,12 +375,16 @@ class ConfigWindow(customtkinter.CTkToplevel):
             timeSlot='预约时间',
             token='地铁令牌'
         )
-        for user in users:
+        for index, user in enumerate(users):
+
+            tooltip = f'{user.get("name")}'
+            if not tooltip:
+                return f'第 {index + 1} 个用户 未填写{required.get("name")}'
+
             # 如果此信息标记为非抢票模式则跳过
             if user.get('shakedown'):
                 continue
 
-            tooltip = f'{user.get("name")}'
             # 校验必填项, 必填项不可为空
             for key, value in required.items():
                 required_value = user.get(key)
