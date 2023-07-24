@@ -2,8 +2,10 @@
 # _date: 2023/7/10 19:57
 
 import tkinter.messagebox
+
 import customtkinter
 import subprocess
+import traceback
 import threading
 import time
 import json
@@ -86,10 +88,16 @@ class APP(customtkinter.CTk):
                     daemon=True
                 )
                 self.subway_threading.start()
-            except (Exception, PermissionError):
+            except AssertionError as error:
+                tkinter.messagebox.showerror('温馨提示', f'{error}')
+
+            except PermissionError:
                 tkinter.messagebox.showerror('温馨提示', f'请以管理员身份打开, 或将应用安装在C盘外')
-                return
-            threading.Thread(target=self.action_listener, daemon=True).start()  # 启动按钮监听事件
+
+            except (Exception, ):
+                tkinter.messagebox.showerror('温馨提示', f'{traceback.format_exc()}')
+            else:
+                threading.Thread(target=self.action_listener, daemon=True).start()  # 启动按钮监听事件
         else:
             tkinter.messagebox.showerror('温馨提示', '抢票任务已启动, 请勿重复点击！')
 

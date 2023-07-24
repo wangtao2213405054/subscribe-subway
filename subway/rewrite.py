@@ -34,7 +34,8 @@ class RewriteSubway(Subway):
                 kwargs=dict(
                     kwargs=item,
                     subway_result=subway_result
-                )
+                ),
+                daemon=True
             )
             result.start()
             task_result.append(result)

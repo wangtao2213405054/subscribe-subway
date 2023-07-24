@@ -347,7 +347,7 @@ class Subway:
                         lineName=_line,
                         stationName=_station,
                         timeSlot=time_slot
-                    ))
+                    ), daemon=True)
                     thread.start()
                     thread_list.append(thread)
 
