@@ -7,20 +7,29 @@
 
 ## 2. 使用说明
 
-### 2.1 使用 APP(支持Mac 和 Windows)
-1. 下载对应平台的PC安装包(Windows 用户非必要不要安装在C盘, 不然需要以管理员身份运行)
-2. 打开配置选项
-   
-    ![Image](images/openConfig.png)
-3. 打开 [北京地铁预约页面](https://webui.mybti.cn/#/login) 抓取 Authorization 字段内容
-   1. 方法一
-   ![Image](images/getAuthorizationOne.png)
-   2. 方法二
-   ![Image](images/getAuthorizationTwo.png)
-4. 选择自己要预约的时间和站点, 并将抓取的 Authorization 添加至地铁令牌中
+### 2.1 使用 APP (支持 Mac 和 Windows)
+1. 下载软件:
+   - 请根据您的PC平台下载对应的应用APP( Linux 用户请查看 [2.2 Server](#22-server-)准备工作 )。
+2. 安装注意事项：
+   - 在 Windows 系统上使用软件时，请确保不要将软件安装在C盘根目录下，否则需要以管理员方式运行软件。
+3. 配置步骤
+   - 打开下载的软件APP。
+   - ![Image](images/openConfig.png)
+   - 登录[北京地铁预约页面](https://webui.mybti.cn/#/login)，并获取 Authorization 字段。该字段用于访问抢票所需的信息。
+     1. 方法一
+     ![Image](images/getAuthorizationOne.png)
+     2. 方法二
+     ![Image](images/getAuthorizationTwo.png)
+   - （可选）如果需要将抢票结果以钉钉消息的形式推送至钉钉群组，请配置钉钉的Webhook和Sign信息。
+   - 选择抢票站点和时间。最多支持配置五个用户，且每个用户的名称不能为空（至少添加一个用户）。
+      ![Image](images/writeConfig.png)
+   - 配置完成后，请保存设置。
+4. 运行程序：
+   - 确认配置已经保存，然后点击运行程序按钮。
 
-    ![Image](images/writeConfig.png)
-5. 点击确认后返回主界面，点击运行即可
+5. 可选配置：
+   - 钉钉消息推送：如果已经配置了钉钉信息，可以勾选此选项，抢票结果将以钉钉消息形式推送。
+   - 日志等级：默认日志等级为INFO，您可以选择DEBUG查看详细日志。
 
 ### 2.2 Server 准备工作
 
