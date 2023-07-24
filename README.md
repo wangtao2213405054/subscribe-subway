@@ -7,9 +7,24 @@
 
 ## 2. 使用说明
 
-### 2.1 准备工作
+### 2.1 使用 APP(支持Mac 和 Windows)
+1. 下载对应平台的PC安装包(Windows 用户非必要不要安装在C盘, 不然需要以管理员身份运行)
+2. 打开配置选项
+   
+    ![Image](images/openConfig.png)
+3. 打开 [北京地铁预约页面](https://webui.mybti.cn/#/login) 抓取 Authorization 字段内容
+   1. 方法一
+   ![Image](images/getAuthorizationOne.png)
+   2. 方法二
+   ![Image](images/getAuthorizationTwo.png)
+4. 选择自己要预约的时间和站点, 并将抓取的 Authorization 添加至地铁令牌中
 
-在使用自动预约程序之前，需要完成以下准备工作：
+    ![Image](images/writeConfig.png)
+5. 点击确认后返回主界面，点击运行即可
+
+### 2.2 Server 准备工作
+
+如果你需要使用纯代码模式，需要完成以下准备工作：
 
 1. 安装 Python3.9 及以上开发环境。
 2. 安装程序所需要的依赖库：requests、click。可通过( python setup.py install )安装所有依赖
@@ -54,13 +69,13 @@ token = ""  // * token 对应了地铁预约程序的 authorization 字段
 shakedown = false // 如果 shakedown 参数为 true 则忽略此用户, 此用户将不会参与抢票、验证及消息通知
 ```
 
-### 2.2 运行程序
+### 2.3 运行程序
 
 1. 打开控制台（Terminal）或命令行窗口。
 2. 进入程序所在目录的 subway 目录之中，并运行 `python main.py` 命令。(可通过运行 `python main.py --help` 命令查看所需参数)
 3. 程序会在预约成功后发送钉钉通知，提醒用户到达地铁车站。
 
-### 2.3 注意事项
+### 2.4 注意事项
 
 - 本程序仅用于测试和学习目的，禁止用于商业用途。
 - 请勿滥用进站预约服务，以免影响其他乘客的出行。
