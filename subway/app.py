@@ -350,7 +350,8 @@ class ConfigWindow(customtkinter.CTkToplevel):
             self.config_tab.set(default)
             self.user_index += 1
         else:
-            self.config_tab.set(default)
+            self.user_index += 1
+            self.command_add_user()
 
     def command_channel_window(self):
         """ 取消按钮的钩子 """
